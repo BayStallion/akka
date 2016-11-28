@@ -19,7 +19,7 @@ object Dependencies {
   val Versions = Seq(
     crossScalaVersions := Seq("2.11.8"), // "2.12.0"
     scalaVersion := crossScalaVersions.value.head,
-    scalaStmVersion := sys.props.get("akka.build.scalaStmVersion").getOrElse("0.7"),
+    scalaStmVersion := sys.props.get("akka.build.scalaStmVersion").getOrElse("0.8"),
     scalaCheckVersion := sys.props.get("akka.build.scalaCheckVersion").getOrElse(
       if (scalaVersion.value.startsWith("2.12")) "1.13.4" // does not work for 2.11
       else "1.13.2"
@@ -68,8 +68,8 @@ object Dependencies {
     // For Java 8 Conversions
     val java8Compat = Def.setting {"org.scala-lang.modules" %% "scala-java8-compat" % java8CompatVersion.value} // Scala License
     
-    val aeronDriver = "io.aeron"                      % "aeron-driver"                 % "1.0.2"       // ApacheV2
-    val aeronClient = "io.aeron"                      % "aeron-client"                 % "1.0.2"       // ApacheV2
+    val aeronDriver = "io.aeron"                      % "aeron-driver"                 % "1.0.4"       // ApacheV2
+    val aeronClient = "io.aeron"                      % "aeron-client"                 % "1.0.4"       // ApacheV2
 
     object Docs {
       val sprayJson   = "io.spray"                   %%  "spray-json"                  % "1.3.2"             % "test"

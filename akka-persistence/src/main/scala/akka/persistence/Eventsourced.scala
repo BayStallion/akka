@@ -9,12 +9,12 @@ import java.util.UUID
 
 import scala.collection.immutable
 import scala.util.control.NonFatal
-import akka.actor.{ DeadLetter, ReceiveTimeout, StashOverflowException }
+import akka.actor.{ DeadLetter, StashOverflowException }
 import akka.util.Helpers.ConfigOps
 import akka.event.Logging
 import akka.event.LoggingAdapter
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * INTERNAL API
@@ -45,6 +45,7 @@ private[persistence] object Eventsourced {
 private[persistence] trait Eventsourced extends Snapshotter with PersistenceStash with PersistenceIdentity with PersistenceRecovery {
   import JournalProtocol._
   import SnapshotProtocol.LoadSnapshotResult
+  import SnapshotProtocol.LoadSnapshotFailed
   import Eventsourced._
 
   private val extension = Persistence(context.system)
@@ -207,7 +208,7 @@ private[persistence] trait Eventsourced extends Snapshotter with PersistenceStas
           super.aroundPreRestart(reason, Some(m))
         case mo ⇒
           flushJournalBatch()
-          super.aroundPreRestart(reason, None)
+          super.aroundPreRestart(reason, mo)
       }
     }
   }
@@ -501,6 +502,10 @@ private[persistence] trait Eventsourced extends Snapshotter with PersistenceStas
         }
         changeState(recovering(recoveryBehavior, timeout))
         journal ! ReplayMessages(lastSequenceNr + 1L, toSnr, replayMax, persistenceId, self)
+
+      case LoadSnapshotFailed(cause) ⇒
+        timeoutCancellable.cancel()
+        try onRecoveryFailure(cause, event = None) finally context.stop(self)
 
       case RecoveryTick(true) ⇒
         try onRecoveryFailure(
